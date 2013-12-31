@@ -31,7 +31,8 @@ class UserController extends AbstractActionController
     protected $options;
     
     /*
-     * @todo Make this dynamic / translation-friendly @var string
+     * @todo Make this dynamic / translation-friendly 
+     * @var string
      */
     protected $failedAddProviderMessage = 'Add provider failed. Please try again.';
 
@@ -316,3 +317,4 @@ class UserController extends AbstractActionController
         return $this->options;
     }
 }
+?>
