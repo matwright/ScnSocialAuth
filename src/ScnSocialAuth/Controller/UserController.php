@@ -135,8 +135,35 @@ class UserController extends AbstractActionController
         }
 
         // Replace the adapters in the module options with the HybridAuth adapter
-        $zfcUserModuleOptions = $this->getServiceLocator()->get('zfcuser_module_options');
-        $zfcUserModuleOptions->setAuthAdapters(array(100 => 'ScnSocialAuth\Authentication\Adapter\HybridAuth'));
+        $chain = $this->getServiceLocator()->get('ZfcUser\Authentication\Adapter\AdapterChain');
+        $adapter = $this->getServiceLocator()->get('ScnSocialAuth\Authentication\Adapter\HybridAuth');
+        // Clear existing listeners as we only want HybridAuth as authentication method
+        $chain->getEventManager()->clearListeners('authenticate');
+        $chain->getEventManager()->clearListeners('logout');
+        if (is_callable(array(
+            $adapter,
+            'authenticate'
+        ))) {
+            $chain->getEventManager()->attach('authenticate', array(
+                $adapter,
+                'authenticate'
+            ), 100);
+        }
+        
+        if (is_callable(array(
+            $adapter,
+            'logout'
+        ))) {
+            $chain->getEventManager()->attach('logout', array(
+                $adapter,
+                'logout'
+            ), 100);
+        }
+        
+        // Update zfcuser_auth_service to use the HybridAuth adapter also
+        $zfcUserAuthService = $this->getServiceLocator()->get('zfcuser_auth_service');
+        $zfcUserAuthService->setAdapter($this->getServiceLocator()
+            ->get('ZfcUser\Authentication\Adapter\AdapterChain'));
 
         // Adding the provider to request metadata to be used by HybridAuth adapter
         $this->getRequest()->setMetadata('provider', $provider);
